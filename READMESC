@@ -1,1 +1,7 @@
 
+
+📌 Pasos clave:
+✅ Diseñar y desarrollar los contratos en Solidity.
+✅ Probar los contratos en una red de pruebas local (Hardhat, Ganache, Foundry).
+✅ Desplegarlos en una testnet como Polygon Amoy, Sepolia o Goerli.
+✅ Guardar las direcciones de los contratos desplegados.
