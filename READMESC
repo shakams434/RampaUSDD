@@ -21,11 +21,8 @@ Hardhat es una herramienta que nos permite compilar, probar y desplegar contrato
 
 1️⃣ Abre Git Bash y crea una carpeta para el proyecto
 
-bash
-Copiar
-Editar
-mkdir venta-usdd
-cd venta-usdd
+        mkdir venta-usdd
+        cd venta-usdd
 
 2️⃣ Inicializa un proyecto en Hardhat
 
