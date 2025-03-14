@@ -5,8 +5,11 @@ Rampa fiat a criptoactivo
 Antes de comenzar, asegúrate de tener instalados los siguientes programas en tu máquina:
 
 ✅ Node.js (>= 16.x) → Descárgalo de https://nodejs.org/
+
 ✅ NPM (>= 8.x) → Viene con Node.js
+
 ✅ MetaMask con fondos en la red Amoy
+
 
 1️⃣ Clonar el Proyecto o Crear una Carpeta
 Clónalo con:
@@ -50,7 +53,7 @@ Crea un archivo llamado server.js:
 
 Abre server.js y copia y pega el siguiente código:
 
-```
+
         require("dotenv").config();
         const express = require("express");
         const cors = require("cors");
@@ -147,5 +150,23 @@ Abre server.js y copia y pega el siguiente código:
         
         const PORT = process.env.PORT || 3001;
         app.listen(PORT, () => console.log(`🚀 Servidor backend corriendo en puerto ${PORT}`));
-```
 
+
+6️⃣ Ejecutar el Servidor
+Una vez que tengas el código, inicia el backend con:
+
+      node server.js
+
+Deberías ver un mensaje como:
+
+      🚀 Servidor backend corriendo en puerto 3001
+
+7️⃣ Probar API con Postman o cURL
+Puedes probar las rutas del backend usando Postman o cURL.
+
+Ejemplo para recargar saldo:
+
+      curl -X POST http://localhost:3001/recargar -H "Content-Type: application/json" -d '{"usuario": "0xTuDireccion", "monto": 10
+
+
+🎉 ¡Listo!
