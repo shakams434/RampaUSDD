@@ -2,7 +2,7 @@
 Rampa fiat a criptoactivo
 
 
-Antes de comenzar, asegúrate de tener instalados los siguientes programas en tu máquina:
+1️⃣ Antes de comenzar, asegúrate de tener instalados los siguientes programas en tu máquina:
 
 ✅ Node.js (>= 16.x) → Descárgalo de https://nodejs.org/
 
@@ -11,11 +11,7 @@ Antes de comenzar, asegúrate de tener instalados los siguientes programas en tu
 ✅ MetaMask con fondos en la red Amoy
 
 
-1️⃣ Clonar el Proyecto o Crear una Carpeta
-Clónalo con:
-
-      git clone <URL_DEL_REPOSITORIO>
-      cd <CARPETA_DEL_PROYECTO>
+ Crear una Carpeta
 
 2️⃣ Inicializar el Proyecto Node.js
 Ejecuta:
