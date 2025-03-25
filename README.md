@@ -2,6 +2,7 @@
 🚀 Rampa USDD - Documentación del Proyecto
 
 📂 Índice
+
 🔹 Pre-requisitos
 
 🔹 Variables de Entorno
@@ -12,7 +13,9 @@
 
 🔹 Despliegue y Uso
 
+
 ✅ Pre-requisitos
+
 
    ✅ Node.js (>= 16.x) → Descárgalo de https://nodejs.org/
    
@@ -25,6 +28,7 @@
    ✅ Git y Git Bash
    
    ✅MetaMask
+
 
 🔐 Variables de Entorno
 Crea un archivo .env en la raíz:
@@ -45,7 +49,7 @@ Esto creará un package.json con la configuración del proyecto.
 
 ➡️ 1. Instalar dependencias:
 
-  npm install express cors dotenv ethers
+        npm install express cors dotenv ethers
 
   📌 Explicación de las dependencias:
 
@@ -57,7 +61,7 @@ ethers → Para interactuar con la blockchain.
   
 ➡️ 2. Crear y configurar el archivo server.js:
 
-  touch server.js
+        touch server.js
   
 📥 Copia y pega el código backend completo.
 
@@ -163,7 +167,7 @@ Abre server.js y copia y pega el siguiente código:
 
 ➡️ 3. Iniciar el servidor:
 
-  node server.js
+        node server.js
   
 El backend quedará corriendo en: http://localhost:3001
 
@@ -173,7 +177,7 @@ El backend quedará corriendo en: http://localhost:3001
 
 ➡️ 1. Instalar dependencias:
 
-  npm install react react-dom axios ethers react-scripts
+        npm install react react-dom axios ethers react-scripts
   
 ➡️ 2. Crear o editar App.js:
 
@@ -182,202 +186,205 @@ El backend quedará corriendo en: http://localhost:3001
   
 📥 Pega el código frontend completo.
 
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { ethers } from "ethers";
-
-const API_URL = "http://localhost:3001"; // Tu backend local
-const USDD_CONTRACT_ADDRESS = "0xF400b46B9302af87b8e3F831D30967aFe122B297";
-const VENTA_CONTRACT_ADDRESS = "0x12736BCB6C7f4c447Ac5aCda50F633FB5F1eEE00";
-
-const ERC20_ABI = [
-    "function balanceOf(address owner) view returns (uint256)",
-    "function decimals() view returns (uint8)",
-    "function transfer(address to, uint256 amount) public returns (bool)"
-];
-
-const VENTA_ABI = [
-    "function comprarUSDD(address comprador, uint256 montoUSDD) external"
-];
-
-const App = () => {
-    const [wallet, setWallet] = useState(null);
-    const [balanceUSD, setBalanceUSD] = useState(0);
-    const [balanceUSDD, setBalanceUSDD] = useState(0);
-    const [monto, setMonto] = useState("");
-    const [mensaje, setMensaje] = useState("");
-    const [historial, setHistorial] = useState([]);
-
-    useEffect(() => {
-        detectarWallet();
-        if (window.ethereum) {
-            window.ethereum.on("accountsChanged", async (accounts) => {
-                if (accounts.length > 0) {
-                    setWallet(accounts[0]);
-                    actualizarBalances(accounts[0]);
-                } else {
-                    setWallet(null);
-                }
-            });
-        }
-    }, []);
-
-    const detectarWallet = async () => {
-        if (window.ethereum) {
-            try {
-                const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-                setWallet(accounts[0]);
-                actualizarBalances(accounts[0]);
-            } catch (error) {
-                console.error("❌ Error al conectar MetaMask:", error);
-            }
-        } else {
-            alert("⚠️ MetaMask no está instalado.");
-        }
-    };
-
-    const actualizarBalances = async (direccion) => {
-        await consultarBalanceUSD(direccion);
-        await consultarBalanceUSDD(direccion);
-        await consultarHistorial(direccion);
-    };
-
-    const consultarBalanceUSD = async (direccion) => {
-        try {
-            const { data } = await axios.get(`${API_URL}/balanceUSD`, { params: { usuario: direccion } });
-            setBalanceUSD(data.balance);
-        } catch (error) {
-            console.error("❌ Error consultando balance de USD:", error);
-        }
-    };
-
-    const consultarBalanceUSDD = async (direccion) => {
-        try {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const usddToken = new ethers.Contract(USDD_CONTRACT_ADDRESS, ERC20_ABI, provider);
-            const decimals = await usddToken.decimals();
-            const balance = await usddToken.balanceOf(direccion);
-            const formattedBalance = ethers.utils.formatUnits(balance, decimals);
-            setBalanceUSDD(parseFloat(formattedBalance));
-        } catch (error) {
-            console.error("❌ Error consultando balance de USDD:", error);
-        }
-    };
-
-    const consultarHistorial = async (direccion) => {
-        try {
-            console.log("📡 Consultando historial de compras en la blockchain...");
-            const { data } = await axios.get(`${API_URL}/historialBlockchain`, { params: { usuario: direccion } });
-
-            if (data.length === 0) {
-                console.log("⚠️ No se encontraron transacciones para esta wallet.");
-            }
-
-            setHistorial(data);
-        } catch (error) {
-            console.error("❌ Error consultando historial desde la blockchain:", error);
-            setHistorial([]);
-        }
-    };
-
-    const recargarUSD = async () => {
-        if (!wallet) return alert("⚠️ Conecta MetaMask primero.");
-        try {
-            const { data } = await axios.post(`${API_URL}/recargar`, { usuario: wallet, monto: parseFloat(monto) });
-            setBalanceUSD(data.balance);
-            setMensaje(data.mensaje);
-        } catch (error) {
-            console.error("❌ Error en la recarga:", error);
-        }
-    };
-
-    const intercambiarToken = async () => {
-        if (!wallet) return alert("⚠️ Conecta MetaMask primero");
-        
-        try {
-            if (balanceUSD < monto) {
-                setMensaje("❌ Saldo insuficiente en USD. Recarga primero.");
-                return;
-            }
-    
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-            const ventaUSDD = new ethers.Contract(VENTA_CONTRACT_ADDRESS, VENTA_ABI, signer);
-    
-            const { data: precioData } = await axios.get(`${API_URL}/precio`);
-            const precioUSDD = parseFloat(precioData.precioUSDD);
-            const montoUSDD = monto / precioUSDD;
-            const amountToSend = ethers.utils.parseUnits(montoUSDD.toString(), 18);
-    
-            console.log(`⚡ Aprobando compra de ${montoUSDD} USDD para el contrato de venta...`);
-    
-            const gasPrice = await provider.getGasPrice();
-            const gasLimit = ethers.utils.hexlify(600000);
-
-            const tx = await ventaUSDD.comprarUSDD(wallet, amountToSend, {
-                gasLimit: gasLimit,
-                maxFeePerGas: gasPrice.mul(2),  
-                maxPriorityFeePerGas: gasPrice
-            });
-            console.log(`⏳ Transacción enviada. Hash: ${tx.hash}`);
-    
-            await tx.wait();
-            console.log("✅ Transacción confirmada!");
-    
-            setMensaje(`✅ Has recibido ${montoUSDD} USDD en tu wallet. Ver transacción: https://www.oklink.com/amoy/tx/${tx.hash}`);
-    
-            const { data } = await axios.post(`${API_URL}/registrarTransaccion`, { 
-                usuario: wallet, 
-                montoUSD: parseFloat(monto), 
-                txHash: tx.hash 
-            });
-
-            if (data.nuevoBalanceUSD !== undefined) {
-                setBalanceUSD(data.nuevoBalanceUSD);  
-            }
-
-            await actualizarBalances(wallet);
-            setTimeout(() => consultarHistorial(wallet), 3000);  
-    
-        } catch (error) {
-            console.error("❌ Error en la transacción:", error);
-            setMensaje("❌ Error en la transacción: " + (error.data?.message || error.message));
-        }
-    };
-
-    return (
-        <div style={{ textAlign: "center", marginTop: "50px" }}>
-            <h1>Pasarela de Pagos en Amoy</h1>
-            <p><strong>Wallet conectada:</strong> {wallet || "No detectada"}</p>
-            <p><strong>Balance en USD (ficticio):</strong> ${balanceUSD}</p>
-            <p><strong>Balance en USDD:</strong> {balanceUSDD} USDD</p>
-            <input type="number" value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="Monto en USD"/>
-            <br />
-            <button onClick={recargarUSD}>Recargar USD</button>
-            <button onClick={intercambiarToken}>Intercambiar por USDD</button>
-            <p>{mensaje}</p>
-            <h3>Historial de Transacciones</h3>
-            <ul>{historial.map((tx, index) => (<li key={index}><strong>Monto USD:</strong> {tx.montoUSD} → <strong> Hash:</strong> <a href={`https://www.oklink.com/amoy/tx/${tx.txHash}`} target="_blank" rel="noopener noreferrer">{tx.txHash.slice(0, 10)}...</a></li>))}</ul>
-        </div>
-    );
-};
-
-export default App;
+         import React, { useState, useEffect } from "react";
+         import axios from "axios";
+         import { ethers } from "ethers";
+         
+         const API_URL = "http://localhost:3001"; // Tu backend local
+         const USDD_CONTRACT_ADDRESS = "0xF400b46B9302af87b8e3F831D30967aFe122B297";
+         const VENTA_CONTRACT_ADDRESS = "0x12736BCB6C7f4c447Ac5aCda50F633FB5F1eEE00";
+         
+         const ERC20_ABI = [
+             "function balanceOf(address owner) view returns (uint256)",
+             "function decimals() view returns (uint8)",
+             "function transfer(address to, uint256 amount) public returns (bool)"
+         ];
+         
+         const VENTA_ABI = [
+             "function comprarUSDD(address comprador, uint256 montoUSDD) external"
+         ];
+         
+         const App = () => {
+             const [wallet, setWallet] = useState(null);
+             const [balanceUSD, setBalanceUSD] = useState(0);
+             const [balanceUSDD, setBalanceUSDD] = useState(0);
+             const [monto, setMonto] = useState("");
+             const [mensaje, setMensaje] = useState("");
+             const [historial, setHistorial] = useState([]);
+         
+             useEffect(() => {
+                 detectarWallet();
+                 if (window.ethereum) {
+                     window.ethereum.on("accountsChanged", async (accounts) => {
+                         if (accounts.length > 0) {
+                             setWallet(accounts[0]);
+                             actualizarBalances(accounts[0]);
+                         } else {
+                             setWallet(null);
+                         }
+                     });
+                 }
+             }, []);
+         
+             const detectarWallet = async () => {
+                 if (window.ethereum) {
+                     try {
+                         const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+                         setWallet(accounts[0]);
+                         actualizarBalances(accounts[0]);
+                     } catch (error) {
+                         console.error("❌ Error al conectar MetaMask:", error);
+                     }
+                 } else {
+                     alert("⚠️ MetaMask no está instalado.");
+                 }
+             };
+         
+             const actualizarBalances = async (direccion) => {
+                 await consultarBalanceUSD(direccion);
+                 await consultarBalanceUSDD(direccion);
+                 await consultarHistorial(direccion);
+             };
+         
+             const consultarBalanceUSD = async (direccion) => {
+                 try {
+                     const { data } = await axios.get(`${API_URL}/balanceUSD`, { params: { usuario: direccion } });
+                     setBalanceUSD(data.balance);
+                 } catch (error) {
+                     console.error("❌ Error consultando balance de USD:", error);
+                 }
+             };
+         
+             const consultarBalanceUSDD = async (direccion) => {
+                 try {
+                     const provider = new ethers.providers.Web3Provider(window.ethereum);
+                     const usddToken = new ethers.Contract(USDD_CONTRACT_ADDRESS, ERC20_ABI, provider);
+                     const decimals = await usddToken.decimals();
+                     const balance = await usddToken.balanceOf(direccion);
+                     const formattedBalance = ethers.utils.formatUnits(balance, decimals);
+                     setBalanceUSDD(parseFloat(formattedBalance));
+                 } catch (error) {
+                     console.error("❌ Error consultando balance de USDD:", error);
+                 }
+             };
+         
+             const consultarHistorial = async (direccion) => {
+                 try {
+                     console.log("📡 Consultando historial de compras en la blockchain...");
+                     const { data } = await axios.get(`${API_URL}/historialBlockchain`, { params: { usuario: direccion } });
+         
+                     if (data.length === 0) {
+                         console.log("⚠️ No se encontraron transacciones para esta wallet.");
+                     }
+         
+                     setHistorial(data);
+                 } catch (error) {
+                     console.error("❌ Error consultando historial desde la blockchain:", error);
+                     setHistorial([]);
+                 }
+             };
+         
+             const recargarUSD = async () => {
+                 if (!wallet) return alert("⚠️ Conecta MetaMask primero.");
+                 try {
+                     const { data } = await axios.post(`${API_URL}/recargar`, { usuario: wallet, monto: parseFloat(monto) });
+                     setBalanceUSD(data.balance);
+                     setMensaje(data.mensaje);
+                 } catch (error) {
+                     console.error("❌ Error en la recarga:", error);
+                 }
+             };
+         
+             const intercambiarToken = async () => {
+                 if (!wallet) return alert("⚠️ Conecta MetaMask primero");
+                 
+                 try {
+                     if (balanceUSD < monto) {
+                         setMensaje("❌ Saldo insuficiente en USD. Recarga primero.");
+                         return;
+                     }
+             
+                     const provider = new ethers.providers.Web3Provider(window.ethereum);
+                     const signer = provider.getSigner();
+                     const ventaUSDD = new ethers.Contract(VENTA_CONTRACT_ADDRESS, VENTA_ABI, signer);
+             
+                     const { data: precioData } = await axios.get(`${API_URL}/precio`);
+                     const precioUSDD = parseFloat(precioData.precioUSDD);
+                     const montoUSDD = monto / precioUSDD;
+                     const amountToSend = ethers.utils.parseUnits(montoUSDD.toString(), 18);
+             
+                     console.log(`⚡ Aprobando compra de ${montoUSDD} USDD para el contrato de venta...`);
+             
+                     const gasPrice = await provider.getGasPrice();
+                     const gasLimit = ethers.utils.hexlify(600000);
+         
+                     const tx = await ventaUSDD.comprarUSDD(wallet, amountToSend, {
+                         gasLimit: gasLimit,
+                         maxFeePerGas: gasPrice.mul(2),  
+                         maxPriorityFeePerGas: gasPrice
+                     });
+                     console.log(`⏳ Transacción enviada. Hash: ${tx.hash}`);
+             
+                     await tx.wait();
+                     console.log("✅ Transacción confirmada!");
+             
+                     setMensaje(`✅ Has recibido ${montoUSDD} USDD en tu wallet. Ver transacción: https://www.oklink.com/amoy/tx/${tx.hash}`);
+             
+                     const { data } = await axios.post(`${API_URL}/registrarTransaccion`, { 
+                         usuario: wallet, 
+                         montoUSD: parseFloat(monto), 
+                         txHash: tx.hash 
+                     });
+         
+                     if (data.nuevoBalanceUSD !== undefined) {
+                         setBalanceUSD(data.nuevoBalanceUSD);  
+                     }
+         
+                     await actualizarBalances(wallet);
+                     setTimeout(() => consultarHistorial(wallet), 3000);  
+             
+                 } catch (error) {
+                     console.error("❌ Error en la transacción:", error);
+                     setMensaje("❌ Error en la transacción: " + (error.data?.message || error.message));
+                 }
+             };
+         
+             return (
+                 <div style={{ textAlign: "center", marginTop: "50px" }}>
+                     <h1>Pasarela de Pagos en Amoy</h1>
+                     <p><strong>Wallet conectada:</strong> {wallet || "No detectada"}</p>
+                     <p><strong>Balance en USD (ficticio):</strong> ${balanceUSD}</p>
+                     <p><strong>Balance en USDD:</strong> {balanceUSDD} USDD</p>
+                     <input type="number" value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="Monto en USD"/>
+                     <br />
+                     <button onClick={recargarUSD}>Recargar USD</button>
+                     <button onClick={intercambiarToken}>Intercambiar por USDD</button>
+                     <p>{mensaje}</p>
+                     <h3>Historial de Transacciones</h3>
+                     <ul>{historial.map((tx, index) => (<li key={index}><strong>Monto USD:</strong> {tx.montoUSD} → <strong> Hash:</strong> <a href= 
+                     {`https://www.oklink.com/amoy/tx/${tx.txHash}`} target="_blank" rel="noopener noreferrer">{tx.txHash.slice(0, 10)}...</a></li>))}</ul>
+                 </div>
+             );
+         };
+         
+         export default App;
 
 
 
 ➡️ 3. Levantar el frontend:
 
-  npm start
+        npm start
 
   
 Accede desde: http://localhost:5173 (o el puerto que aparezca)
 
+
 📦 Despliegue y Uso
+
 ✅ Abre MetaMask y selecciona la red Polygon Amoy Testnet.
 
 ✅ Recarga USD ficticio desde el frontend.
 
 ✅ Intercambia por USDD y verifica tu historial.
 
-✅ Consulta saldos y transacciones desde la app.📚 Estructura recomendada para tu README:
+✅ Consulta saldos y transacciones desde la app.
