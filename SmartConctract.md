@@ -66,45 +66,47 @@ dotenv: Permite cargar variables de entorno desde un archivo .env.
 
 solidity
 
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+        // SPDX-License-Identifier: MIT
+        pragma solidity ^0.8.20;
+        
+        // Importa implementación del token ERC20
+        import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+        // Importa control de propiedad (soloOwner)
+        import "@openzeppelin/contracts/access/Ownable.sol";
+        
+        // Contrato del token USDD, tipo ERC20, con control de dueño
+        contract Prueba_Token is ERC20, Ownable {
+            // Precio estable simulado (1 USDD = 1 USD ficticio)
+            uint256 public stablePrice = 1 * 10**18;
+        
+            // Constructor: define nombre y símbolo, y hace mint inicial al dueño
+            constructor() ERC20("prueba Token", "prueba") Ownable(msg.sender) {
+                _mint(msg.sender, 30_000_000 * 10 ** decimals());
+            }
+        
+            // Función para acuñar tokens a una dirección (solo el dueño)
+            function mint(address to, uint256 amount) external onlyOwner {
+                _mint(to, amount);
+            }
+        
+            // Función para quemar tokens del dueño (solo el dueño)
+            function burn(uint256 amount) external onlyOwner {
+                _burn(msg.sender, amount);
+            }
+        
+            // Establece un nuevo precio estable (solo el dueño)
+            function setStablePrice(uint256 newPrice) external onlyOwner {
+                require(newPrice > 0, "El precio debe ser mayor a 0");
+                stablePrice = newPrice;
+            }
+        
+            // Aprueba a otro contrato para gastar una cantidad (solo el dueño)
+            function approveSale(address saleContract, uint256 amount) external onlyOwner {
+                _approve(msg.sender, saleContract, amount);
+            }
+        }
 
-// Importa implementación del token ERC20
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-// Importa control de propiedad (soloOwner)
-import "@openzeppelin/contracts/access/Ownable.sol";
 
-// Contrato del token USDD, tipo ERC20, con control de dueño
-contract USDD_Token is ERC20, Ownable {
-    // Precio estable simulado (1 USDD = 1 USD ficticio)
-    uint256 public stablePrice = 1 * 10**18;
-
-    // Constructor: define nombre y símbolo, y hace mint inicial al dueño
-    constructor() ERC20("USDD Token", "USDD") Ownable(msg.sender) {
-        _mint(msg.sender, 30_000_000 * 10 ** decimals());
-    }
-
-    // Función para acuñar tokens a una dirección (solo el dueño)
-    function mint(address to, uint256 amount) external onlyOwner {
-        _mint(to, amount);
-    }
-
-    // Función para quemar tokens del dueño (solo el dueño)
-    function burn(uint256 amount) external onlyOwner {
-        _burn(msg.sender, amount);
-    }
-
-    // Establece un nuevo precio estable (solo el dueño)
-    function setStablePrice(uint256 newPrice) external onlyOwner {
-        require(newPrice > 0, "El precio debe ser mayor a 0");
-        stablePrice = newPrice;
-    }
-
-    // Aprueba a otro contrato para gastar una cantidad (solo el dueño)
-    function approveSale(address saleContract, uint256 amount) external onlyOwner {
-        _approve(msg.sender, saleContract, amount);
-    }
-}
 
 📌 Contrato VentaUSDD.sol
 📍 Ubicación: contracts/VentaUSDD.sol
@@ -152,17 +154,17 @@ contract USDD_Token is ERC20, Ownable {
 
 
         require("@nomicfoundation/hardhat-toolbox");
-        require("dotenv").config();
-        
-        module.exports = {
-          solidity: "0.8.20",
-          networks: {
-            amoy: {
-              url: process.env.INFURA_URL,
-              accounts: [process.env.PRIVATE_KEY]
-            }
-          }
-        };
+              require("dotenv").config();
+              
+              module.exports = {
+                solidity: "0.8.20",
+                networks: {
+                  amoy: {
+                    url: process.env.INFURA_URL,
+                    accounts: [process.env.PRIVATE_KEY]
+                  }
+                }
+              };
 
 🔹 Paso 5: Crear los Scripts de Despliegue
 📌 Crea una carpeta scripts dentro del proyecto y agrega los siguientes archivos:
@@ -170,40 +172,22 @@ contract USDD_Token is ERC20, Ownable {
 📌 Desplegar USDD_Token
 📍 Ubicación: scripts/deployUSDD.js
 
-
-// Importa el entorno de Hardhat Runtime Environment (hre)
-const hre = require("hardhat");
-
-async function main() {
-  const PRUEBA = await hre.ethers.getContractFactory("Prueba_Token");
-  const prueba = await PRUEBA.deploy();
-
-  await prueba.waitForDeployment(); // ✅ asegura que ya fue minado
-  const deployedAddress = await prueba.getAddress(); // ✅ obtiene la dirección
-
-  console.log(`✅ PRUEBA Token desplegado en: ${deployedAddress}`);
-}
-
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
-const hre = require("hardhat");
-
-async function main() {
-  const PRUEBA = await hre.ethers.getContractFactory("Prueba_Token");
-  const prueba = await PRUEBA.deploy();
-
-  await prueba.waitForDeployment(); // ✅ asegura que ya fue minado
-  const deployedAddress = await prueba.getAddress(); // ✅ obtiene la dirección
-
-  console.log(`✅ PRUEBA Token desplegado en: ${deployedAddress}`);
-}
-
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+        const hre = require("hardhat");
+        
+        async function main() {
+          const PRUEBA = await hre.ethers.getContractFactory("Prueba_Token");
+          const prueba = await PRUEBA.deploy();
+        
+          await prueba.waitForDeployment(); // ✅ asegura que ya fue minado
+          const deployedAddress = await prueba.getAddress(); // ✅ obtiene la dirección
+        
+          console.log(`✅ PRUEBA Token desplegado en: ${deployedAddress}`);
+        }
+        
+        main().catch((error) => {
+          console.error(error);
+          process.exit(1);
+        });
 
 
 
