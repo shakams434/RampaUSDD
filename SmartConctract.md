@@ -12,7 +12,7 @@
 🔹 Paso 1: Configurar el Entorno
 Primero, asegúrate de tener instaladas las herramientas necesarias:
 
-✅ Node.js (versión 16 o superior) 👉 Descargar aquí
+✅ Node.js (versión 16 o superior)
 
 ✅ Metamask con la red de prueba Polygon Amoy
 
@@ -38,11 +38,23 @@ Selecciona "Create a JavaScript project", y acepta todas las opciones por defect
         npm install @openzeppelin/contracts
         npm install @chainlink/contracts
 
+Glosario:
+hardhat: Entorno de desarrollo para compilar, probar y desplegar smart contracts en Ethereum.
+
+@nomicfoundation/hardhat-toolbox: Conjunto de herramientas útiles para pruebas, depuración y análisis en Hardhat.
+
+dotenv: Permite cargar variables de entorno desde un archivo .env.
+
+@openzeppelin/contracts: Librería con contratos inteligentes seguros y reutilizables (como ERC-20, ERC-721).
+
+@chainlink/contracts: Contratos para interactuar con oráculos de Chainlink (por ejemplo, para obtener precios externos).
+
+
 4️⃣ Configura el archivo .env para almacenar las claves privadas y el RPC de Polygon Amoy.
 📌 Crea un archivo .env en la raíz del proyecto con el siguiente contenido:
 
         PRIVATE_KEY=TU_CLAVE_PRIVADA
-        INFURA_URL=https://polygon-amoy.infura.io/v3/TU_INFURA_API_KEY
+        INFURA_URL=https://rpc-amoy.polygon.technology
         
 ⚠️ No compartas tu clave privada con nadie.
 
@@ -54,36 +66,45 @@ Selecciona "Create a JavaScript project", y acepta todas las opciones por defect
 
 solidity
 
-        // SPDX-License-Identifier: MIT
-        pragma solidity ^0.8.20;
-        
-        import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-        import "@openzeppelin/contracts/access/Ownable.sol";
-        
-        contract USDD_Token is ERC20, Ownable {
-            uint256 public stablePrice = 1 * 10**18;
-        
-            constructor() ERC20("USDD Token", "USDD") Ownable(msg.sender) {
-                _mint(msg.sender, 30_000_000 * 10 ** decimals());
-            }
-        
-            function mint(address to, uint256 amount) external onlyOwner {
-                _mint(to, amount);
-            }
-        
-            function burn(uint256 amount) external onlyOwner {
-                _burn(msg.sender, amount);
-            }
-        
-            function setStablePrice(uint256 newPrice) external onlyOwner {
-                require(newPrice > 0, "El precio debe ser mayor a 0");
-                stablePrice = newPrice;
-            }
-        
-            function approveSale(address saleContract, uint256 amount) external onlyOwner {
-                _approve(msg.sender, saleContract, amount);
-            }
-        }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+// Importa implementación del token ERC20
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+// Importa control de propiedad (soloOwner)
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+// Contrato del token USDD, tipo ERC20, con control de dueño
+contract USDD_Token is ERC20, Ownable {
+    // Precio estable simulado (1 USDD = 1 USD ficticio)
+    uint256 public stablePrice = 1 * 10**18;
+
+    // Constructor: define nombre y símbolo, y hace mint inicial al dueño
+    constructor() ERC20("USDD Token", "USDD") Ownable(msg.sender) {
+        _mint(msg.sender, 30_000_000 * 10 ** decimals());
+    }
+
+    // Función para acuñar tokens a una dirección (solo el dueño)
+    function mint(address to, uint256 amount) external onlyOwner {
+        _mint(to, amount);
+    }
+
+    // Función para quemar tokens del dueño (solo el dueño)
+    function burn(uint256 amount) external onlyOwner {
+        _burn(msg.sender, amount);
+    }
+
+    // Establece un nuevo precio estable (solo el dueño)
+    function setStablePrice(uint256 newPrice) external onlyOwner {
+        require(newPrice > 0, "El precio debe ser mayor a 0");
+        stablePrice = newPrice;
+    }
+
+    // Aprueba a otro contrato para gastar una cantidad (solo el dueño)
+    function approveSale(address saleContract, uint256 amount) external onlyOwner {
+        _approve(msg.sender, saleContract, amount);
+    }
+}
 
 📌 Contrato VentaUSDD.sol
 📍 Ubicación: contracts/VentaUSDD.sol
@@ -150,20 +171,44 @@ solidity
 📍 Ubicación: scripts/deployUSDD.js
 
 
-        const hre = require("hardhat");
-        
-        async function main() {
-          const USDD = await hre.ethers.getContractFactory("USDD_Token");
-          const usdd = await USDD.deploy();
-        
-          await usdd.deployed();
-          console.log(`✅ USDD Token desplegado en: ${usdd.address}`);
-        }
-        
-        main().catch((error) => {
-          console.error(error);
-          process.exit(1);
-        });
+// Importa el entorno de Hardhat Runtime Environment (hre)
+const hre = require("hardhat");
+
+async function main() {
+  const PRUEBA = await hre.ethers.getContractFactory("Prueba_Token");
+  const prueba = await PRUEBA.deploy();
+
+  await prueba.waitForDeployment(); // ✅ asegura que ya fue minado
+  const deployedAddress = await prueba.getAddress(); // ✅ obtiene la dirección
+
+  console.log(`✅ PRUEBA Token desplegado en: ${deployedAddress}`);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
+const hre = require("hardhat");
+
+async function main() {
+  const PRUEBA = await hre.ethers.getContractFactory("Prueba_Token");
+  const prueba = await PRUEBA.deploy();
+
+  await prueba.waitForDeployment(); // ✅ asegura que ya fue minado
+  const deployedAddress = await prueba.getAddress(); // ✅ obtiene la dirección
+
+  console.log(`✅ PRUEBA Token desplegado en: ${deployedAddress}`);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
+
+
+
+
+
 
 📌 Desplegar VentaUSDD
 📍 Ubicación: scripts/deployVenta.js
